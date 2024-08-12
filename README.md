@@ -1,3 +1,3 @@
-# ai-projects
+# ai-language-detector
 
 asd
