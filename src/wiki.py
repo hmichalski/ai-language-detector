@@ -5,7 +5,15 @@ class WikipediaScraper:
     def __init__(self, url="https://en.wikipedia.org/wiki/List_of_Wikipedias"):
         self.url = url
 
-    def fetch_wikipedias(self):
+    def fetch_wiki_languages(self):
+        """
+        Fetches a list of languages and their corresponding language codes from the
+        Wikipedia page that lists all Wikipedias.
+
+        :return: A list of dictionaries, where each dictionary contains:
+                 - 'language_name': The name of the language (e.g., 'English').
+                 - 'language_code': The language code used by Wikipedia (e.g., 'en').
+        """
         response = requests.get(self.url)
         if response.status_code != 200:
             raise Exception(f"Failed to retrieve page. Status code: {response.status_code}")
@@ -14,7 +22,7 @@ class WikipediaScraper:
         table = soup.find('table', {'class': 'wikitable'})
         rows = table.find_all('tr')[1:]  # Skip the header row
 
-        wikipedias = []
+        languages = []
 
         for row in rows:
             columns = row.find_all('td')
@@ -22,18 +30,40 @@ class WikipediaScraper:
                 language_name = columns[1].text.strip()  # Column for language name
                 language_code = columns[3].text.strip()  # Column for language code
 
-                wikipedias.append({
+                languages.append({
                     'language_name': language_name,
                     'language_code': language_code
                 })
 
-        return wikipedias
+        return languages
+    
+    def fetch_random_article(self, language_code):
+        """
+        Fetches a random Wikipedia article in the specified language.
 
+        :param language_code: The language code (e.g., 'en', 'de', 'ty', 'pi', 'gcr').
+        :return: URL of the random Wikipedia article.
+        """
+        url = f"https://{language_code}.wikipedia.org/wiki/Special:Random"
+        response = requests.get(url)
+    
+        if response.status_code != 200:
+            raise Exception(f"Failed to retrieve article. Status code: {response.status_code}")
+        
+        return response.url
+        
 # Example usage
 if __name__ == "__main__":
     scraper = WikipediaScraper()
-    wikipedias = scraper.fetch_wikipedias()
+    languages = scraper.fetch_wiki_languages()
 
-    # Every language_code.wikipedia.org has a page
-    for wikipedia in wikipedias:
-        print(f"{wikipedia['language_code']}.wikipedia.org")
+    # Print the list of languages fetched
+    for language in languages:
+        print(language)
+
+    # Fetch and print a random article for each language code
+    print("\nFetching random articles for each language:")
+    for language in languages:
+        lang_code = language['language_code']
+        random_article_url = scraper.fetch_random_article(lang_code)
+        print(f"Random article URL in {lang_code}: {random_article_url}")
